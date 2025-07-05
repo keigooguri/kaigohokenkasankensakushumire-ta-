@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "225単位/日",
             details: [
                 '個別機能訓練計画の作成と実施',
                 '機能訓練指導員（理学療法士、作業療法士、言語聴覚士、看護職員、柔道整復師、あん摩マッサージ指圧師）の配置',
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "3単位/日",
             details: [
                 '認知症介護実践リーダー研修修了者を1名以上配置',
                 '認知症ケアに関する専門的なチームによるケア',
@@ -59,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "10単位/日",
             details: [
                 '夜間（22時～翌6時）に看護職員を1名以上配置',
                 '緊急時の対応体制の整備',
@@ -77,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "39単位/日",
         },
         {
             id: 'kasan5',
@@ -90,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "50単位/日",
         },
         {
             id: 'kasan6',
@@ -103,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "30単位/月",
         },
         {
             id: 'kasan7',
@@ -116,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "14単位/日",
         },
         {
             id: 'kasan8',
@@ -129,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "1440単位/回",
         },
         {
             id: 'kasan9',
@@ -142,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "10単位/月",
         },
         {
             id: 'kasan10',
@@ -155,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "300単位/月",
         },
         {
             id: 'kasan11',
@@ -168,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "200単位/日",
         },
         {
             id: 'kasan12',
@@ -181,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "500単位/回",
         },
         {
             id: 'kasan13',
@@ -194,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: ['level_1', 'level_2', 'level_3', 'level_4', 'level_5', 'level_6', 'level_7', 'other'],
             },
+            unitCount: "地域区分による",
         },
         {
             id: 'kasan14',
@@ -207,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "18単位/日",
         },
         {
             id: 'kasan15',
@@ -220,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "12単位/日",
         },
         {
             id: 'kasan16',
@@ -233,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "50単位/回",
         },
         {
             id: 'kasan17',
@@ -246,10 +262,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            unitCount: "10単位/日",
             details: [
                 '常勤看護職員の配置基準の強化',
                 '認定看護師または専門看護師の配置',
                 '医療処置が必要な利用者への対応強化',
+            ],
+        },
+        {
+            id: 'kasan18',
+            name: '大規模事業所加算',
+            description: '一定規模以上の事業所で、効率的なサービス提供体制を整備している場合に算定。',
+            conditions: {
+                facilityType: ['day-service', 'home-visit'], // 例としてデイサービスと訪問介護に適用
+                features: [],
+                staffingSystem: [],
+                careLevel: [],
+                userCount: 50, // 利用者数が50人以上の場合に適用
+                location: [],
+            },
+            unitCount: "-5単位/日 (減算)", // 大規模事業所加算は減算の場合が多い
+            details: [
+                '利用者数が一定規模（例: 50人以上）であること',
+                '効率的な運営体制が整備されていること',
             ],
         },
     ];
@@ -301,9 +336,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             }
 
-            // 利用者数 (ここでは単純に値が入力されていればOKとする)
-            if (conditions.userCount !== null && (isNaN(userCount) || userCount <= 0)) {
-                return false;
+            // 利用者数
+            if (conditions.userCount !== null) {
+                if (isNaN(userCount) || userCount < conditions.userCount) {
+                    return false;
+                }
             }
 
             // 施設の所在地
@@ -320,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 kasanDiv.classList.add('result-item');
                 kasanDiv.innerHTML = `
                     <h3>${kasan.name}</h3>
+                    <p>単位数: ${kasan.unitCount || '不明'}</p>
                     <p>${kasan.description}</p>
                 `;
                 // 詳細情報があれば表示
