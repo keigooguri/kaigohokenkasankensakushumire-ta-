@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            details: [
+                '個別機能訓練計画の作成と実施',
+                '機能訓練指導員（理学療法士、作業療法士、言語聴覚士、看護職員、柔道整復師、あん摩マッサージ指圧師）の配置',
+                '利用者ごとの目標設定と評価',
+            ],
         },
         {
             id: 'kasan2',
@@ -36,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            details: [
+                '認知症介護実践リーダー研修修了者を1名以上配置',
+                '認知症ケアに関する専門的なチームによるケア',
+                '認知症行動・心理症状（BPSD）への対応',
+            ],
         },
         {
             id: 'kasan3',
@@ -49,6 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            details: [
+                '夜間（22時～翌6時）に看護職員を1名以上配置',
+                '緊急時の対応体制の整備',
+                '利用者への巡回、体位変換、排泄介助など',
+            ],
         },
         {
             id: 'kasan4',
@@ -231,6 +246,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 userCount: null,
                 location: [],
             },
+            details: [
+                '常勤看護職員の配置基準の強化',
+                '認定看護師または専門看護師の配置',
+                '医療処置が必要な利用者への対応強化',
+            ],
         },
     ];
 
@@ -302,6 +322,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3>${kasan.name}</h3>
                     <p>${kasan.description}</p>
                 `;
+                // 詳細情報があれば表示
+                if (kasan.details) {
+                    kasanDiv.innerHTML += `
+                        <h4>詳細:</h4>
+                        <ul>
+                            ${kasan.details.map(detail => `<li>${detail}</li>`).join('')}
+                        </ul>
+                    `;
+                }
                 resultsList.appendChild(kasanDiv);
             });
         } else {
