@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>介護保険 加算検索シミュレーター</title>
+    <meta property="og:title" content="介護保険 加算検索シミュレーター">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://example.com/ogp-image.png"> <!-- 適切な画像URLに置き換えてください -->
+    <meta property="og:url" content="https://your-app-url.com"> <!-- 適切な公開URLに置き換えてください -->
+    <meta property="og:description" content="あなたの介護施設が介護保険の中でどの加算が取れるかを簡単に検索できるシミュレーターです。">
+    <meta property="og:site_name" content="介護保険 加算検索シミュレーター">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>介護保険 加算検索シミュレーター</h1>
+        <p>あなたの施設で算定可能な加算を簡単に検索できます。</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <form id="search-form">
+                <section class="form-section">
+                    <h2>1. 施設種別</h2>
+                    <select id="facility-type" class="form-select">
+                        <option value="">選択してください</option>
+                        <optgroup label="施設サービス">
+                            <option value="tokuyo">特別養護老人ホーム（介護老人福祉施設）</option>
+                            <option value="rouken">介護老人保健施設</option>
+                            <option value="iryouin">介護医療院</option>
+                            <option value="ryoyogata">介護療養型医療施設</option>
+                        </optgroup>
+                        <optgroup label="居宅サービス">
+                            <option value="day-service">デイサービス（通所介護）</option>
+                            <option value="home-visit">訪問介護</option>
+                            <option value="home-nursing">訪問看護</option>
+                            <option value="short-stay">ショートステイ（短期入所生活介護）</option>
+                            <option value="group-home">グループホーム（認知症対応型共同生活介護）</option>
+                            <option value="syotaki">小規模多機能型居宅介護</option>
+                        </optgroup>
+                    </select>
+                </section>
+
+                <section class="form-section">
+                    <h2>2. 施設の特徴（複数選択可）</h2>
+                    <div class="checkbox-group">
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="nurse_stationed"> 看護師常駐 <span class="tooltip-icon">?</span><span class="tooltip-text">施設に看護師が常勤または非常勤で配置されている体制を指します。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="rehab_equipment"> リハビリ設備・機能訓練室あり <span class="tooltip-icon">?</span><span class="tooltip-text">機能訓練を行うための専用のスペースや、必要な機器が整備されている状態です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="dementia_care"> 認知症ケア専門チームあり <span class="tooltip-icon">?</span><span class="tooltip-text">認知症ケアに関する専門的な研修を修了した職員を中心としたチームが、ケアを提供している体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="night_shift"> 夜間職員配置あり <span class="tooltip-icon">?</span><span class="tooltip-text">夜間帯（22時〜翌6時など）に、基準以上の介護・看護職員を配置している体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="mitori_care"> 看取り介護体制あり <span class="tooltip-icon">?</span><span class="tooltip-text">人生の最終段階における本人・家族の意向を尊重し、医師や看護師と連携して看取りを行う体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="medical_cooperation"> 医療機関連携体制（24時間） <span class="tooltip-icon">?</span><span class="tooltip-text">地域の協力医療機関と契約し、24時間いつでも医師や看護師と連絡・連携が取れる体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="oral_hygiene"> 口腔衛生管理体制あり <span class="tooltip-icon">?</span><span class="tooltip-text">歯科医師または歯科衛生士と連携し、入所者の口腔ケア計画を策定・実施している体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="nutrition_management"> 栄養ケア・マネジメント実施 <span class="tooltip-icon">?</span><span class="tooltip-text">管理栄養士が中心となり、入所者一人ひとりの栄養状態を評価し、改善計画を立てている状態です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="individual_bath"> 個別入浴に対応 <span class="tooltip-icon">?</span><span class="tooltip-text">大浴槽ではなく、個室または可動式の浴槽で、一人ずつ入浴できる設備と体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="ict_utilization"> ICT活用（介護記録ソフト等） <span class="tooltip-icon">?</span><span class="tooltip-text">介護記録、情報共有、請求業務などでICT（情報通信技術）を活用し、業務効率化を図っている状態です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="24h_support"> 24時間対応体制 <span class="tooltip-icon">?</span><span class="tooltip-text">利用者からの緊急連絡に24時間対応し、必要に応じて訪問できる体制です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="severe_case_support"> 重症者対応 <span class="tooltip-icon">?</span><span class="tooltip-text">人工呼吸器装着者や気管切開者など、医療依存度の高い利用者への対応が可能です。</span></label>
+                        <label class="tooltip-container"> <input type="checkbox" name="features" value="mental_health_support"> 精神科訪問看護対応 <span class="tooltip-icon">?</span><span class="tooltip-text">精神疾患を持つ利用者に対し、専門的な知識を持つ看護師が訪問看護を提供します。</span></label>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>3. 職員配置体制</h2>
+                    <select id="staffing-system" class="form-select">
+                        <option value="">選択してください</option>
+                        <option value="standard">人員基準を満たす（基本）</option>
+                        <option value="care_worker_50">介護福祉士50%以上</option>
+                        <option value="care_worker_70">介護福祉士70%以上</option>
+                        <option value="long_term_75">勤続7年以上の介護福祉士が25%以上</option>
+                        <option value="nurse_enhanced">看護職員体制強化</option>
+                    </select>
+                    <div class="tooltip-container-select">
+                        <span class="tooltip-icon-select">?</span>
+                        <span class="tooltip-text-select">
+                            <b>介護福祉士50%以上:</b> 全介護職員に占める介護福祉士の割合が50%を超えている状態。<br>
+                            <b>介護福祉士70%以上:</b> 同じく、割合が70%を超えている状態。<br>
+                            <b>勤続7年以上の介護福祉士が25%以上:</b> 経験豊富な介護福祉士が一定数以上いることを示します。<br>
+                            <b>看護職員体制強化:</b> 看護師の配置を手厚くしたり、認定看護師を配置したりしている体制です。
+                        </span>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>4. 要介護度</h2>
+                    <select id="care-level" class="form-select">
+                        <option value="">選択してください</option>
+                        <option value="care_level_1">要介護1</option>
+                        <option value="care_level_2">要介護2</option>
+                        <option value="care_level_3">要介護3</option>
+                        <option value="care_level_4">要介護4</option>
+                        <option value="care_level_5">要介護5</option>
+                    </select>
+                </section>
+
+                <section class="form-section">
+                    <h2>5. 利用者数</h2>
+                    <input type="number" id="user-count" class="form-select" placeholder="利用者数を入力してください（例: 30）" min="1">
+                </section>
+
+                <section class="form-section">
+                    <h2>6. 施設の所在地</h2>
+                    <select id="location" class="form-select">
+                        <option value="">選択してください</option>
+                        <option value="level_1">1級地（+20%）- 東京都特別区</option>
+                        <option value="level_2">2級地（+16%）- 横浜市, 大阪市など</option>
+                        <option value="level_3">3級地（+15%）- さいたま市, 千葉市, 名古屋市など</option>
+                        <option value="level_4">4級地（+12%）- 札幌市, 仙台市, 京都市, 神戸市, 広島市, 福岡市など</option>
+                        <option value="level_5">5級地（+10%）- 茨城県, 埼玉県, 千葉県, 東京都, 神奈川県, 愛知県, 大阪府, 兵庫県の市町村</option>
+                        <option value="level_6">6級地（+6%）- 宮城県, 茨城県, 栃木県, 群馬県, 埼玉県, 千葉県, 東京都, 神奈川県, 岐阜県, 静岡県, 愛知県, 三重県, 滋賀県, 京都府, 大阪府, 兵庫県, 奈良県, 和歌山県, 福岡県の市町村</option>
+                        <option value="level_7">7級地（+3%）- 北海道, 青森県, 岩手県, 宮城県, 秋田県, 山形県, 福島県, 茨城県, 栃木県, 群馬県, 新潟県, 富山県, 石川県, 福井県, 山梨県, 長野県, 岐阜県, 静岡県, 三重県, 鳥取県, 島根県, 岡山県, 広島県, 山口県, 徳島県, 香川県, 愛媛県, 高知県, 福岡県, 佐賀県, 長崎県, 熊本県, 大分県, 宮崎県, 鹿児島県の市町村</option>
+                        <option value="other">その他（+0%）- 上記以外の地域</option>
+                    </select>
+
+                <div class="button-group">
+                    <button type="submit" class="search-button">検索する</button>
+                    <button type="reset" class="reset-button">リセット</button>
+                </div>
+            </form>
+
+            <div id="results-container">
+                <h2>検索結果</h2>
+                <div id="results-list">
+                    <p class="no-results">条件を選択して検索してください。</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 介護保険 加算検索シミュレーター</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
