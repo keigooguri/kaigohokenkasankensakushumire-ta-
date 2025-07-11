@@ -359,73 +359,191 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- フィルタリングロジック ---
         const matchingKasans = kasanData.filter(kasan => {
             const conditions = kasan.conditions;
+            let passed = true; // この加算がフィルタリングを通過したかどうか
+            let kasanDebug = `
+--- 加算ID: ${kasan.id} ---
+`;
 
             // 1. 施設種別によるフィルタリング (必須)
-            if (conditions.facilityType.length > 0 && !conditions.facilityType.includes(selectedFacilityType)) {
+            if (conditions.facilityType.length > 0) {
+                kasanDebug += `  -> Checking facilityType: ${conditions.facilityType.join(', ')} vs ${selectedFacilityType}
+`;
+                if (!conditions.facilityType.includes(selectedFacilityType)) {
+                    kasanDebug += `    -> Rejected: facilityType mismatch
+`;
+                    passed = false;
+                }
+            } else {
+                kasanDebug += `  -> No facilityType condition for this kasan
+`;
+            }
+
+            if (!passed) {
+                if (debugOutput) debugOutput.textContent += kasanDebug + `  -> FAILED CHECKS (Early Exit: facilityType)
+`;
                 return false;
             }
 
             // 2. 基本料のフィルタリング
             if (kasan.id.startsWith('base_')) {
+                kasanDebug += `    -> Is a base fee (ID: ${kasan.id})
+`;
                 // 通所介護の基本料の場合
                 if (kasan.id.startsWith('base_day_service')) {
+                    kasanDebug += `      -> Is day-service base fee. userCount: ${userCount}, isNaN(userCount): ${isNaN(userCount)}, facilityScale: ${facilityScale}, kasan.conditions.scale: ${conditions.scale}
+`;
                     // 利用者数が未入力または無効な場合、通所介護の基本料は表示しない
                     if (isNaN(userCount) || userCount <= 0) {
-                        return false;
+                        kasanDebug += `        -> Rejected: userCount is NaN or <= 0 for day-service base fee
+`;
+                        passed = false;
                     }
                     // 計算された規模と加算の規模が一致しない場合は除外
-                    if (conditions.scale !== facilityScale) {
-                        return false;
+                    else if (conditions.scale !== facilityScale) {
+                        kasanDebug += `        -> Rejected: scale mismatch (${conditions.scale} !== ${facilityScale}) for day-service base fee
+`;
+                        passed = false;
                     }
                 }
                 // 訪問リハビリの基本料の場合
                 else if (kasan.id.startsWith('base_home_rehab')) {
+                    kasanDebug += `      -> Is home-rehab base fee. selectedFacilityType: ${selectedFacilityType}
+`;
                     // 施設種別が訪問リハビリでない場合は除外
                     if (selectedFacilityType !== 'home-rehab') {
-                        return false;
+                        kasanDebug += `        -> Rejected: selectedFacilityType is not home-rehab for home-rehab base fee
+`;
+                        passed = false;
                     }
                 }
-                // その他の基本料は、ここでは考慮しない（必要に応じて追加）
+                // その他の基本料（もしあれば、ここでは考慮しない）
                 else {
                     // 選択された施設種別と一致しない基本料は除外
                     if (!conditions.facilityType.includes(selectedFacilityType)) {
-                        return false;
+                        kasanDebug += `        -> Rejected: selectedFacilityType not in kasan.conditions.facilityType for other base fee
+`;
+                        passed = false;
                     }
                 }
+            } else {
+                kasanDebug += `    -> Not a base fee, skipping base fee specific checks
+`;
+            }
+
+            if (!passed) {
+                if (debugOutput) debugOutput.textContent += kasanDebug + `  -> FAILED CHECKS (Early Exit: base fee)
+`;
+                return false;
             }
 
             // 3. 施設の特徴によるフィルタリング
             if (conditions.features.length > 0) {
+                kasanDebug += `  -> Checking features: ${conditions.features.join(', ')} vs ${selectedFeatures.join(', ')}
+`;
                 for (const feature of conditions.features) {
                     if (!selectedFeatures.includes(feature)) {
-                        return false;
+                        kasanDebug += `    -> Rejected: feature "${feature}" not selected
+`;
+                        passed = false;
+                        break;
                     }
                 }
+            } else {
+                kasanDebug += `  -> No feature condition for this kasan
+`;
+            }
+
+            if (!passed) {
+                if (debugOutput) debugOutput.textContent += kasanDebug + `  -> FAILED CHECKS (Early Exit: features)
+`;
+                return false;
             }
 
             // 4. 職員配置体制によるフィルタリング
-            if (conditions.staffingSystem.length > 0 && !conditions.staffingSystem.includes(selectedStaffingSystem)) {
+            if (conditions.staffingSystem.length > 0) {
+                kasanDebug += `  -> Checking staffingSystem: ${conditions.staffingSystem.join(', ')} vs ${selectedStaffingSystem}
+`;
+                if (!conditions.staffingSystem.includes(selectedStaffingSystem)) {
+                    kasanDebug += `    -> Rejected: staffingSystem mismatch
+`;
+                    passed = false;
+                }
+            } else {
+                kasanDebug += `  -> No staffingSystem condition for this kasan
+`;
+            }
+
+            if (!passed) {
+                if (debugOutput) debugOutput.textContent += kasanDebug + `  -> FAILED CHECKS (Early Exit: staffingSystem)
+`;
                 return false;
             }
 
             // 5. 要介護度によるフィルタリング
-            if (conditions.careLevel.length > 0 && !conditions.careLevel.includes(selectedCareLevel)) {
+            if (conditions.careLevel.length > 0) {
+                kasanDebug += `  -> Checking careLevel: ${conditions.careLevel.join(', ')} vs ${selectedCareLevel}
+`;
+                if (!conditions.careLevel.includes(selectedCareLevel)) {
+                    kasanDebug += `    -> Rejected: careLevel mismatch
+`;
+                    passed = false;
+                }
+            } else {
+                kasanDebug += `  -> No careLevel condition for this kasan
+`;
+            }
+
+            if (!passed) {
+                if (debugOutput) debugOutput.textContent += kasanDebug + `  -> FAILED CHECKS (Early Exit: careLevel)
+`;
                 return false;
             }
 
             // 6. 利用者数の下限チェック
             if (conditions.userCount !== null && conditions.userCount !== undefined) {
+                kasanDebug += `  -> Checking userCount: ${userCount} vs ${conditions.userCount}
+`;
                 if (isNaN(userCount) || userCount < conditions.userCount) {
-                    return false;
+                    kasanDebug += `    -> Rejected: userCount too low or invalid
+`;
+                    passed = false;
                 }
+            } else {
+                kasanDebug += `  -> No userCount condition for this kasan
+`;
             }
 
-            // 7. 所在地によるフィルタリング
-            if (conditions.location.length > 0 && !conditions.location.includes(selectedLocation)) {
+            if (!passed) {
+                if (debugOutput) debugOutput.textContent += kasanDebug + `  -> FAILED CHECKS (Early Exit: userCount)
+`;
                 return false;
             }
 
-            return true; // すべての条件をクリア
+            // 7. 所在地によるフィルタリング
+            if (conditions.location.length > 0) {
+                kasanDebug += `  -> Checking location: ${conditions.location.join(', ')} vs ${selectedLocation}
+`;
+                if (!conditions.location.includes(selectedLocation)) {
+                    kasanDebug += `    -> Rejected: location mismatch
+`;
+                    passed = false;
+                }
+            } else {
+                kasanDebug += `  -> No location condition for this kasan
+`;
+            }
+
+            if (passed) {
+                kasanDebug += `  -> PASSED ALL CHECKS
+`;
+            } else {
+                kasanDebug += `  -> FAILED CHECKS
+`;
+            }
+            if (debugOutput) {
+                debugOutput.textContent += kasanDebug;
+            }
+            return passed; // すべての条件をクリア
         });
 
         if (debugOutput) {
