@@ -343,9 +343,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             }
 
-            // 事業所規模
-            if (conditions.scale && conditions.scale !== facilityScale) {
-                return false;
+            // 事業所規模 (通所介護のみ適用)
+            if (selectedFacilityType === 'day-service') {
+                if (conditions.scale && conditions.scale !== facilityScale) {
+                    return false;
+                }
+                // 基本料以外の加算は、規模の条件を持たないため、ここではじかれないようにする
+                if (!conditions.scale && kasan.id.startsWith('kasan')) {
+                    // no-op
+                } else if (!conditions.scale && !kasan.id.startsWith('base_day_service')){
+                    // no-op
+                } else if (conditions.scale && conditions.scale === facilityScale) {
+                    // no-op
+                } else if (!kasan.id.startsWith('base')){
+                    // no-op
+                } else {
+                    //return false;
+                }
+            } else {
+                // 通所介護以外では、規模別の基本料は表示しない
+                if (kasan.id.startsWith('base_day_service')) {
+                    return false;
+                }
             }
 
             // 施設の特徴
