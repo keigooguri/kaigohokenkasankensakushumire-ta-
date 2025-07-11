@@ -323,102 +323,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function displayResults() {
+        const debugOutput = document.getElementById('debug-output');
         resultsList.innerHTML = ''; // Clear previous results
+
+        // --- 入力値の取得 ---
         const selectedFacilityType = facilityTypeSelect.value;
-        const selectedFeatures = Array.from(featureCheckboxes)
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.value);
-        const selectedStaffingSystem = staffingSystemSelect.value;
-        const selectedCareLevel = careLevelSelect.value;
         const userCount = parseInt(userCountInput.value, 10);
-        const selectedLocation = locationSelect.value;
 
-        // 利用者数が入力されている場合のみ、事業所規模を計算
-        const facilityScale = !isNaN(userCount) && userCount > 0 ? getFacilityScale(userCount) : null;
+        // --- デバッグ情報の表示 ---
+        let debugInfo = `施設種別: ${selectedFacilityType || '未選択'}\n`;
+        debugInfo += `利用者数: ${isNaN(userCount) ? '未入力' : userCount}`;
+        debugOutput.textContent = debugInfo;
 
+        // --- ロジックの単純化（デバッグのため） ---
         const matchingKasans = kasanData.filter(kasan => {
-            const conditions = kasan.conditions;
-
-            // --- フィルタリングロジック ---
-
-            // 1. 施設種別が一致しないものは除外 (必須条件)
-            if (conditions.facilityType.length > 0 && !conditions.facilityType.includes(selectedFacilityType)) {
-                return false;
-            }
-
-            // 2. 事業所規模のチェック (通所介護の場合のみ適用)
-            if (selectedFacilityType === 'day-service') {
-                // 規模の条件を持つ加算（基本料など）の場合、計算された規模と一致しなければ除外
-                if (conditions.scale && conditions.scale !== facilityScale) {
-                    return false;
-                }
-            } else {
-                // 通所介護以外が選択されている場合、通所介護の基本料はすべて除外
-                if (kasan.id.startsWith('base_day_service')) {
-                    return false;
-                }
-            }
-            
-            // 訪問リハビリが選択されている場合、訪問リハビリ以外の基本料は除外
-            if (selectedFacilityType === 'home-rehab') {
-                if (kasan.id.startsWith('base_') && !kasan.id.startsWith('base_home_rehab')) {
-                    return false;
-                }
-            }
-
-
-            // 3. 施設の特徴が一致しないものは除外
-            if (conditions.features.length > 0) {
-                for (const feature of conditions.features) {
-                    if (!selectedFeatures.includes(feature)) {
-                        return false;
-                    }
-                }
-            }
-
-            // 4. 職員配置体制が一致しないものは除外
-            if (conditions.staffingSystem.length > 0 && !conditions.staffingSystem.includes(selectedStaffingSystem)) {
-                return false;
-            }
-
-            // 5. 要介護度が一致しないものは除外
-            if (conditions.careLevel.length > 0 && !conditions.careLevel.includes(selectedCareLevel)) {
-                return false;
-            }
-
-            // 6. 利用者数の下限チェック
-            if (conditions.userCount !== null && conditions.userCount !== undefined) {
-                if (isNaN(userCount) || userCount < conditions.userCount) {
-                    return false;
-                }
-            }
-
-            // 7. 所在地のチェック
-            if (conditions.location.length > 0 && !conditions.location.includes(selectedLocation)) {
-                return false;
-            }
-
-            // すべてのチェックを通過したものを返す
-            return true;
+            // 施設種別が一致するかどうかのみをチェック
+            return kasan.conditions.facilityType.includes(selectedFacilityType);
         });
 
         if (matchingKasans.length > 0) {
             matchingKasans.forEach(kasan => {
                 const kasanDiv = document.createElement('div');
                 kasanDiv.classList.add('result-item');
-                kasanDiv.innerHTML = `
-                    <h3>${kasan.name}</h3>
-                    <p>単位数: ${kasan.unitCount || '不明'}</p>
-                    <p>${kasan.description}</p>
-                `;
-                if (kasan.details) {
-                    kasanDiv.innerHTML += `
-                        <h4>詳細:</h4>
-                        <ul>
-                            ${kasan.details.map(detail => `<li>${detail}</li>`).join('')}
-                        </ul>
-                    `;
-                }
+                kasanDiv.innerHTML = `<h3>${kasan.name}</h3><p>${kasan.description}</p>`;
                 resultsList.appendChild(kasanDiv);
             });
         } else {
