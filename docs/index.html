@@ -41,6 +41,7 @@
                             <option value="short-stay">ショートステイ（短期入所生活介護）</option>
                             <option value="group-home">グループホーム（認知症対応型共同生活介護）</option>
                             <option value="syotaki">小規模多機能型居宅介護</option>
+                            <option value="home-rehab">訪問リハビリ</option>
                         </optgroup>
                     </select>
                 </section>
@@ -90,8 +91,9 @@
                 </section>
 
                 <section class="form-section">
-                    <h2>5. 利用者数</h2>
-                    <input type="number" id="user-count" class="form-select" placeholder="利用者数を入力してください（例: 30）" min="1">
+                    <h2>5. 月の利用者数</h2>
+                    <input type="number" id="user-count" class="form-select" placeholder="例: 350" min="1">
+                    <div id="facility-scale-display" class="scale-display"></div>
                 </section>
 
                 <section class="form-section">

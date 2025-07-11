@@ -8,9 +8,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const userCountInput = document.getElementById('user-count');
     const locationSelect = document.getElementById('location');
     const resultsList = document.getElementById('results-list');
+    const facilityScaleDisplay = document.getElementById('facility-scale-display');
+
+    userCountInput.addEventListener('input', updateUserScaleDisplay);
 
     // 加算データ（簡略化された例）
     const kasanData = [
+        {
+            id: 'base_day_service_normal',
+            name: '通所介護基本料（通常規模型）',
+            description: '通常規模型事業所における基本的な介護サービスに対する報酬です。',
+            conditions: {
+                facilityType: ['day-service'],
+                scale: '通常規模型',
+            },
+            unitCount: "557単位/回", // 例：要介護3、7-8時間の場合
+        },
+        {
+            id: 'base_day_service_large1',
+            name: '通所介護基本料（大規模型I）',
+            description: '大規模型I事業所における基本的な介護サービスに対する報酬です。',
+            conditions: {
+                facilityType: ['day-service'],
+                scale: '大規模型I',
+            },
+            unitCount: "545単位/回", // 例：要介護3、7-8時間の場合
+        },
+        {
+            id: 'base_day_service_large2',
+            name: '通所介護基本料（大規模型II）',
+            description: '大規模型II事業所における基本的な介護サービスに対する報酬です。',
+            conditions: {
+                facilityType: ['day-service'],
+                scale: '大規模型II',
+            },
+            unitCount: "534単位/回", // 例：要介護3、7-8時間の場合
+        },
+        {
+            id: 'base_home_rehab',
+            name: '訪問リハビリテーション基本料',
+            description: '理学療法士、作業療法士、言語聴覚士が居宅を訪問してリハビリテーションを提供した場合の基本報酬です。',
+            conditions: {
+                facilityType: ['home-rehab'],
+            },
+            unitCount: "307単位/回（20分ごと）",
+        },
         {
             id: 'kasan1',
             name: '個別機能訓練加算(I)',
@@ -143,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: 'ICT活用加算',
             description: '介護記録や情報共有にICTを積極的に活用し、業務効率化を図っている場合に算定。',
             conditions: {
-                facilityType: ['tokuyo', 'rouken', 'iryouin', 'ryoyogata', 'day-service', 'home-visit', 'short-stay', 'group-home', 'syotaki'],
+                facilityType: ['tokuyo', 'rouken', 'iryouin', 'ryoyogata', 'day-service', 'home-visit', 'short-stay', 'group-home', 'syotaki', 'home-rehab'],
                 features: ['ict_utilization'],
                 staffingSystem: [],
                 careLevel: [],
@@ -213,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: 'サービス提供体制強化加算(I)',
             description: '介護福祉士の配置割合が一定以上の場合に算定（介護福祉士50%以上）。',
             conditions: {
-                facilityType: ['tokuyo', 'rouken', 'iryouin', 'ryoyogata', 'day-service', 'home-visit', 'short-stay', 'group-home', 'syotaki'],
+                facilityType: ['tokuyo', 'rouken', 'iryouin', 'ryoyogata', 'day-service', 'home-visit', 'short-stay', 'group-home', 'syotaki', 'home-rehab'],
                 features: [],
                 staffingSystem: ['care_worker_50'],
                 careLevel: [],
@@ -227,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: 'サービス提供体制強化加算(II)',
             description: '勤続年数の長い介護福祉士の配置割合が一定以上の場合に算定（勤続7年以上の介護福祉士が25%以上）。',
             conditions: {
-                facilityType: ['tokuyo', 'rouken', 'iryouin', 'ryoyogata', 'day-service', 'home-visit', 'short-stay', 'group-home', 'syotaki'],
+                facilityType: ['tokuyo', 'rouken', 'iryouin', 'ryoyogata', 'day-service', 'home-visit', 'short-stay', 'group-home', 'syotaki', 'home-rehab'],
                 features: [],
                 staffingSystem: ['long_term_75'],
                 careLevel: [],
@@ -269,24 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 '医療処置が必要な利用者への対応強化',
             ],
         },
-        {
-            id: 'kasan18',
-            name: '大規模事業所加算',
-            description: '一定規模以上の事業所で、効率的なサービス提供体制を整備している場合に算定。',
-            conditions: {
-                facilityType: ['day-service', 'home-visit'], // 例としてデイサービスと訪問介護に適用
-                features: [],
-                staffingSystem: [],
-                careLevel: [],
-                userCount: 50, // 利用者数が50人以上の場合に適用
-                location: [],
-            },
-            unitCount: "-5単位/日 (減算)", // 大規模事業所加算は減算の場合が多い
-            details: [
-                '利用者数が一定規模（例: 50人以上）であること',
-                '効率的な運営体制が整備されていること',
-            ],
-        },
     ];
 
     searchForm.addEventListener('submit', (e) => {
@@ -309,11 +333,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const userCount = parseInt(userCountInput.value, 10);
         const selectedLocation = locationSelect.value;
 
+        const facilityScale = getFacilityScale(userCount);
+
         const matchingKasans = kasanData.filter(kasan => {
             const conditions = kasan.conditions;
 
             // 施設種別
             if (conditions.facilityType.length > 0 && !conditions.facilityType.includes(selectedFacilityType)) {
+                return false;
+            }
+
+            // 事業所規模
+            if (conditions.scale && conditions.scale !== facilityScale) {
                 return false;
             }
 
@@ -374,5 +405,26 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             resultsList.innerHTML = '<p class="no-results">該当する加算は見つかりませんでした。</p>';
         }
+    }
+
+    function getFacilityScale(userCount) {
+        if (userCount <= 750) {
+            return '通常規模型';
+        } else if (userCount <= 900) {
+            return '大規模型I';
+        } else {
+            return '大規模型II';
+        }
+    }
+
+    function updateUserScaleDisplay() {
+        const userCount = parseInt(userCountInput.value, 10);
+        if (isNaN(userCount) || userCount <= 0) {
+            facilityScaleDisplay.textContent = '';
+            return;
+        }
+
+        const scale = getFacilityScale(userCount);
+        facilityScaleDisplay.textContent = `事業所規模: ${scale}`;
     }
 });
