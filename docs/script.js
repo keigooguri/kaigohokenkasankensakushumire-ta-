@@ -335,45 +335,97 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedFeatures = Array.from(featureCheckboxes)
             .filter(checkbox => checkbox.checked)
             .map(checkbox => checkbox.value);
-        const staffingSystem = staffingSystemSelect.value;
-        const careLevel = careLevelSelect.value;
+        const selectedStaffingSystem = staffingSystemSelect.value;
+        const selectedCareLevel = careLevelSelect.value;
         const userCount = parseInt(userCountInput.value, 10);
-        const location = locationSelect.value;
+        const selectedLocation = locationSelect.value;
+
+        // 利用者数から事業所規模を計算
+        const facilityScale = getFacilityScale(userCount);
 
         // デバッグ情報の更新
         let debugInfo = `施設種別: "${selectedFacilityType}"\n`;
         debugInfo += `利用者数: ${isNaN(userCount) ? '未入力' : userCount}\n`;
+        debugInfo += `計算された事業所規模: ${facilityScale || 'N/A'}\n`;
         debugInfo += `選択された特徴: [${selectedFeatures.join(', ')}]\n`;
-        debugInfo += `職員配置体制: "${staffingSystem}"\n`;
-        debugInfo += `要介護度: "${careLevel}"\n`;
-        debugInfo += `所在地: "${location}"\n`;
+        debugInfo += `職員配置体制: "${selectedStaffingSystem}"\n`;
+        debugInfo += `要介護度: "${selectedCareLevel}"\n`;
+        debugInfo += `所在地: "${selectedLocation}"\n`;
 
         if (debugOutput) {
             debugOutput.textContent = debugInfo;
         }
 
-        // --- フィルタリングロジック（デバッグのため極限まで単純化） ---
+        // --- フィルタリングロジック ---
         const matchingKasans = kasanData.filter(kasan => {
             const conditions = kasan.conditions;
 
-            // 施設種別が選択されている場合のみフィルタリング
-            if (selectedFacilityType) {
-                // 加算が特定の施設種別を条件としている場合
-                if (conditions.facilityType.length > 0) {
-                    // 選択された施設種別が、加算の条件に含まれていない場合は除外
+            // 1. 施設種別によるフィルタリング (必須)
+            if (conditions.facilityType.length > 0 && !conditions.facilityType.includes(selectedFacilityType)) {
+                return false;
+            }
+
+            // 2. 基本料のフィルタリング
+            if (kasan.id.startsWith('base_')) {
+                // 通所介護の基本料の場合
+                if (kasan.id.startsWith('base_day_service')) {
+                    // 利用者数が未入力または無効な場合、通所介護の基本料は表示しない
+                    if (isNaN(userCount) || userCount <= 0) {
+                        return false;
+                    }
+                    // 計算された規模と加算の規模が一致しない場合は除外
+                    if (conditions.scale !== facilityScale) {
+                        return false;
+                    }
+                }
+                // 訪問リハビリの基本料の場合
+                else if (kasan.id.startsWith('base_home_rehab')) {
+                    // 施設種別が訪問リハビリでない場合は除外
+                    if (selectedFacilityType !== 'home-rehab') {
+                        return false;
+                    }
+                }
+                // その他の基本料は、ここでは考慮しない（必要に応じて追加）
+                else {
+                    // 選択された施設種別と一致しない基本料は除外
                     if (!conditions.facilityType.includes(selectedFacilityType)) {
                         return false;
                     }
                 }
-            } else {
-                // 施設種別が何も選択されていない場合、施設種別を条件としない加算のみ表示
-                if (conditions.facilityType.length > 0) {
+            }
+
+            // 3. 施設の特徴によるフィルタリング
+            if (conditions.features.length > 0) {
+                for (const feature of conditions.features) {
+                    if (!selectedFeatures.includes(feature)) {
+                        return false;
+                    }
+                }
+            }
+
+            // 4. 職員配置体制によるフィルタリング
+            if (conditions.staffingSystem.length > 0 && !conditions.staffingSystem.includes(selectedStaffingSystem)) {
+                return false;
+            }
+
+            // 5. 要介護度によるフィルタリング
+            if (conditions.careLevel.length > 0 && !conditions.careLevel.includes(selectedCareLevel)) {
+                return false;
+            }
+
+            // 6. 利用者数の下限チェック
+            if (conditions.userCount !== null && conditions.userCount !== undefined) {
+                if (isNaN(userCount) || userCount < conditions.userCount) {
                     return false;
                 }
             }
 
-            // ここでは他の条件は無視し、常にtrueを返す（デバッグのため）
-            return true;
+            // 7. 所在地によるフィルタリング
+            if (conditions.location.length > 0 && !conditions.location.includes(selectedLocation)) {
+                return false;
+            }
+
+            return true; // すべての条件をクリア
         });
 
         if (debugOutput) {
@@ -406,6 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getFacilityScale(userCount) {
+        if (isNaN(userCount) || userCount <= 0) {
+            return null; // 利用者数が無効な場合は規模を特定できない
+        }
         if (userCount <= 750) {
             return '通常規模型';
         } else if (userCount <= 900) {
