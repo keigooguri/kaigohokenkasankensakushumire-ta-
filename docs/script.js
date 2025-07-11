@@ -324,28 +324,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function displayResults() {
         const debugOutput = document.getElementById('debug-output');
-        resultsList.innerHTML = ''; // Clear previous results
+        if (debugOutput) {
+            debugOutput.textContent = "displayResults関数が呼び出されました。初期化中...";
+        }
+
+        resultsList.innerHTML = ''; // 以前の結果をクリア
 
         // --- 入力値の取得 ---
         const selectedFacilityType = facilityTypeSelect.value;
+        const selectedFeatures = Array.from(featureCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+        const staffingSystem = staffingSystemSelect.value;
+        const careLevel = careLevelSelect.value;
         const userCount = parseInt(userCountInput.value, 10);
+        const location = locationSelect.value;
 
-        // --- デバッグ情報の表示 ---
-        let debugInfo = `施設種別: ${selectedFacilityType || '未選択'}\n`;
-        debugInfo += `利用者数: ${isNaN(userCount) ? '未入力' : userCount}`;
-        debugOutput.textContent = debugInfo;
+        // デバッグ情報の更新
+        let debugInfo = `施設種別: "${selectedFacilityType}"\n`;
+        debugInfo += `利用者数: ${isNaN(userCount) ? '未入力' : userCount}\n`;
+        debugInfo += `選択された特徴: [${selectedFeatures.join(', ')}]\n`;
+        debugInfo += `職員配置体制: "${staffingSystem}"\n`;
+        debugInfo += `要介護度: "${careLevel}"\n`;
+        debugInfo += `所在地: "${location}"\n`;
 
-        // --- ロジックの単純化（デバッグのため） ---
+        if (debugOutput) {
+            debugOutput.textContent = debugInfo;
+        }
+
+        // --- フィルタリングロジック（デバッグのため極限まで単純化） ---
         const matchingKasans = kasanData.filter(kasan => {
-            // 施設種別が一致するかどうかのみをチェック
-            return kasan.conditions.facilityType.includes(selectedFacilityType);
+            const conditions = kasan.conditions;
+
+            // 施設種別が選択されている場合のみフィルタリング
+            if (selectedFacilityType) {
+                // 加算が特定の施設種別を条件としている場合
+                if (conditions.facilityType.length > 0) {
+                    // 選択された施設種別が、加算の条件に含まれていない場合は除外
+                    if (!conditions.facilityType.includes(selectedFacilityType)) {
+                        return false;
+                    }
+                }
+            } else {
+                // 施設種別が何も選択されていない場合、施設種別を条件としない加算のみ表示
+                if (conditions.facilityType.length > 0) {
+                    return false;
+                }
+            }
+
+            // ここでは他の条件は無視し、常にtrueを返す（デバッグのため）
+            return true;
         });
+
+        if (debugOutput) {
+            debugOutput.textContent += `\n--- フィルタリング結果 ---\n`;
+            debugOutput.textContent += `マッチした加算数: ${matchingKasans.length}\n`;
+        }
 
         if (matchingKasans.length > 0) {
             matchingKasans.forEach(kasan => {
                 const kasanDiv = document.createElement('div');
                 kasanDiv.classList.add('result-item');
-                kasanDiv.innerHTML = `<h3>${kasan.name}</h3><p>${kasan.description}</p>`;
+                kasanDiv.innerHTML = `
+                    <h3>${kasan.name}</h3>
+                    <p>単位数: ${kasan.unitCount || '不明'}</p>
+                    <p>${kasan.description}</p>
+                `;
+                if (kasan.details) {
+                    kasanDiv.innerHTML += `
+                        <h4>詳細:</h4>
+                        <ul>
+                            ${kasan.details.map(detail => `<li>${detail}</li>`).join('')}
+                        </ul>
+                    `;
+                }
                 resultsList.appendChild(kasanDiv);
             });
         } else {
