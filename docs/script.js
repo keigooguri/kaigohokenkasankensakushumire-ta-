@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('search-form');
     const facilityTypeSelect = document.getElementById('facility-type');
@@ -326,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayResults() {
         resultsList.innerHTML = ''; // 以前の結果をクリア
 
-        // --- 入力値の取得 ---
         const selectedFacilityType = facilityTypeSelect.value;
         const selectedFeatures = Array.from(featureCheckboxes)
             .filter(checkbox => checkbox.checked)
@@ -335,117 +333,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedCareLevel = careLevelSelect.value;
         const userCount = parseInt(userCountInput.value, 10);
         const selectedLocation = locationSelect.value;
-
-        // 利用者数から事業所規模を計算
         const facilityScale = getFacilityScale(userCount);
 
-        // --- フィルタリングロジック ---
         const matchingKasans = kasanData.filter(kasan => {
-            const conditions = kasan.conditions;
-            let passed = true; // この加算がフィルタリングを通過したかどうか
-
-            // 1. 施設種別によるフィルタリング (必須)
-            if (conditions.facilityType.length > 0) {
-                if (!conditions.facilityType.includes(selectedFacilityType)) {
-                    passed = false;
-                }
-            }
-
-            if (!passed) {
-                return false;
-            }
-
-            // 2. 基本料のフィルタリング
-            if (kasan.id.startsWith('base_')) {
-                // 通所介護の基本料の場合
-                if (kasan.id.startsWith('base_day_service')) {
-                    // 利用者数が未入力または無効な場合、通所介護の基本料は表示しない
-                    if (isNaN(userCount) || userCount <= 0) {
-                        passed = false;
-                    }
-                    // 計算された規模と加算の規模が一致しない場合は除外
-                    else if (conditions.scale !== facilityScale) {
-                        passed = false;
-                    }
-                }
-                // 訪問リハビリの基本料の場合
-                else if (kasan.id.startsWith('base_home_rehab')) {
-                    // 施設種別が訪問リハビリでない場合は除外
-                    if (selectedFacilityType !== 'home-rehab') {
-                        passed = false;
-                    }
-                }
-                // その他の基本料（もしあれば、ここでは考慮しない）
-                else {
-                    // 選択された施設種別と一致しない基本料は除外
-                    if (!conditions.facilityType.includes(selectedFacilityType)) {
-                        passed = false;
-                    }
-                }
-            } 
-
-            if (!passed) {
-                return false;
-            }
-
-            // 3. 施設の特徴によるフィルタリング
-            if (conditions.features.length > 0) {
-                for (const feature of conditions.features) {
-                    if (!selectedFeatures.includes(feature)) {
-                        passed = false;
-                        break;
-                    }
-                }
-            }
-
-            if (!passed) {
-                return false;
-            }
-
-            // 4. 職員配置体制によるフィルタリング
-            if (conditions.staffingSystem.length > 0) {
-                if (!conditions.staffingSystem.includes(selectedStaffingSystem)) {
-                    passed = false;
-                }
-            }
-
-            if (!passed) {
-                return false;
-            }
-
-            // 5. 要介護度によるフィルタリング
-            if (conditions.careLevel.length > 0) {
-                if (!conditions.careLevel.includes(selectedCareLevel)) {
-                    passed = false;
-                }
-            }
-
-            if (!passed) {
-                return false;
-            }
-
-            // 6. 利用者数の下限チェック
-            if (conditions.userCount !== null && conditions.userCount !== undefined) {
-                if (isNaN(userCount) || userCount < conditions.userCount) {
-                    passed = false;
-                }
-            }
-
-            if (!passed) {
-                return false;
-            }
-
-            // 7. 所在地によるフィルタリング
-            if (conditions.location.length > 0) {
-                if (!conditions.location.includes(selectedLocation)) {
-                    passed = false;
-                }
-            }
-
-            return passed; // すべての条件をクリア
+            return checkAllConditions(kasan, {
+                selectedFacilityType,
+                selectedFeatures,
+                selectedStaffingSystem,
+                selectedCareLevel,
+                userCount,
+                selectedLocation,
+                facilityScale
+            });
         });
 
-        // --- 結果の表示 ---
         if (matchingKasans.length > 0) {
             matchingKasans.forEach(kasan => {
                 const kasanDiv = document.createElement('div');
@@ -470,9 +371,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function checkAllConditions(kasan, userInputs) {
+        const { conditions } = kasan;
+        const {
+            selectedFacilityType,
+            selectedFeatures,
+            selectedStaffingSystem,
+            selectedCareLevel,
+            userCount,
+            selectedLocation,
+            facilityScale
+        } = userInputs;
+
+        // 1. 施設種別
+        if (conditions.facilityType.length > 0 && !conditions.facilityType.includes(selectedFacilityType)) {
+            return false;
+        }
+
+        // 2. 基本料
+        if (kasan.id.startsWith('base_')) {
+            if (kasan.id.startsWith('base_day_service')) {
+                if (isNaN(userCount) || userCount <= 0 || conditions.scale !== facilityScale) {
+                    return false;
+                }
+            } else if (kasan.id.startsWith('base_home_rehab')) {
+                if (selectedFacilityType !== 'home-rehab') {
+                    return false;
+                }
+            } else {
+                if (!conditions.facilityType.includes(selectedFacilityType)) {
+                    return false;
+                }
+            }
+        }
+
+        // 3. 施設の特徴
+        if (conditions.features.length > 0) {
+            for (const feature of conditions.features) {
+                if (!selectedFeatures.includes(feature)) {
+                    return false;
+                }
+            }
+        }
+
+        // 4. 職員配置体制
+        if (conditions.staffingSystem.length > 0 && !conditions.staffingSystem.includes(selectedStaffingSystem)) {
+            return false;
+        }
+
+        // 5. 要介護度
+        if (conditions.careLevel.length > 0 && !conditions.careLevel.includes(selectedCareLevel)) {
+            return false;
+        }
+
+        // 6. 利用者数
+        if (conditions.userCount !== null && conditions.userCount !== undefined) {
+            if (isNaN(userCount) || userCount < conditions.userCount) {
+                return false;
+            }
+        }
+
+        // 7. 所在地
+        if (conditions.location.length > 0 && !conditions.location.includes(selectedLocation)) {
+            return false;
+        }
+
+        return true; // すべての条件をクリア
+    }
+
     function getFacilityScale(userCount) {
         if (isNaN(userCount) || userCount <= 0) {
-            return null; // 利用者数が無効な場合は規模を特定できない
+            return null;
         }
         if (userCount <= 750) {
             return '通常規模型';
