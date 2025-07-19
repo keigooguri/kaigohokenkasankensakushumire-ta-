@@ -1845,23 +1845,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'day_service_kobetsu_kino_kunren_kasan_1_i': "56単位/日",
         'day_service_kobetsu_kino_kunren_kasan_1_ro': "85単位/日",
         'day_service_kobetsu_kino_kunren_kasan_2': "20単位/月",
-        'kasan1': "225単位/日",
-        'kasan2': "3単位/日",
-        'kasan3': "10単位/日",
-        'kasan4': "39単位/日",
-        'kasan5': "50単位/日",
-        'kasan6': "30単位/月",
-        'kasan7': "14単位/日",
-        'kasan8': "1440単位/回",
-        'kasan9': "10単位/月",
-        'kasan10': "300単位/月",
-        'kasan11': "200単位/日",
-        'kasan12': "500単位/回",
-        'kasan13': "地域区分による",
-        'kasan14': "18単位/日",
-        'kasan15': "12単位/日",
-        'kasan16': "50単位/回",
-        'kasan17': "10単位/日",
     };
 
     searchForm.addEventListener('submit', (e) => {
