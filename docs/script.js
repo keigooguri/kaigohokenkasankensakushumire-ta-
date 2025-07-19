@@ -783,8 +783,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 通所介護（デイサービス）
         {
-            id: 'day_service_kobetsu_kino_kunren_kasan',
-            name: '個別機能訓練加算（Ⅰイ・Ⅰロ・Ⅱ）',
+            id: 'day_service_kobetsu_kino_kunren_kasan_1_i',
+            name: '個別機能訓練加算(Ⅰ)イ',
+            description: '機能訓練指導員を配置し、個別機能訓練計画に基づき訓練を行った場合に算定。',
+            conditions: {
+                facilityType: ['day-service'],
+                features: ['rehab_equipment'],
+                staffingSystem: [],
+                careLevel: [],
+                userCount: null,
+                location: [],
+            },
+        },
+        {
+            id: 'day_service_kobetsu_kino_kunren_kasan_1_ro',
+            name: '個別機能訓練加算(Ⅰ)ロ',
+            description: '機能訓練指導員を配置し、個別機能訓練計画に基づき訓練を行った場合に算定。',
+            conditions: {
+                facilityType: ['day-service'],
+                features: ['rehab_equipment'],
+                staffingSystem: [],
+                careLevel: [],
+                userCount: null,
+                location: [],
+            },
+        },
+        {
+            id: 'day_service_kobetsu_kino_kunren_kasan_2',
+            name: '個別機能訓練加算(Ⅱ)',
             description: '機能訓練指導員を配置し、個別機能訓練計画に基づき訓練を行った場合に算定。',
             conditions: {
                 facilityType: ['day-service'],
@@ -1816,6 +1842,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'base_day_service_large2': "534単位/回",
         'base_home_rehab': "307単位/回（20分ごと）",
         'gensan_large_scale': "一部の加算が減算対象",
+        'day_service_kobetsu_kino_kunren_kasan_1_i': "56単位/日",
+        'day_service_kobetsu_kino_kunren_kasan_1_ro': "85単位/日",
+        'day_service_kobetsu_kino_kunren_kasan_2': "20単位/月",
         'kasan1': "225単位/日",
         'kasan2': "3単位/日",
         'kasan3': "10単位/日",
